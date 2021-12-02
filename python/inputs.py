@@ -5,7 +5,6 @@ def get_input(day: int, example: bool = False, split: str = '\n', raw: bool = Fa
     """
     Get the input for the year and day
 
-    :param year int: year to get
     :param day int: day to get
     :param example bool: example file rather than real
     """
@@ -20,7 +19,6 @@ def get_ints(day, **kwargs):
     """
     Return list of ints from input file
 
-    :param year int: year to get
     :param day int: day to get
     :param example bool: example file rather than real
     """
