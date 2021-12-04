@@ -2,21 +2,23 @@ from inputs import get_input
 
 class Board:
     def __init__(self, grid_strs):
-        # use set for rows as only one number and we can then match numbers
-        self.grid = [{int(x) for x in line.strip().split()} for line in grid_strs]
+        # make grid with list rows
+        self.grid = [[int(x) for x in line.strip().split()] for line in grid_strs]
+        # then set rows
+        self.set_rows = [set(x) for x in self.grid]
         # create tranpose for comparing column matches
-        self.tgrid = [*map(set, zip(*self.grid))]
+        self.set_cols = [*map(set, zip(*self.grid))]
 
     def is_match(self, numbers: set):
         """
         Checks for match by masking with number set, each row and column in the board
         """
-        for row in self.grid:
+        for row in self.set_rows:
             if row & numbers == row:
                 return True
 
-        for row in self.tgrid:
-            if row & numbers == row:
+        for col in self.set_cols:
+            if set(col) & numbers == col:
                 return True
 
         return False
@@ -39,10 +41,7 @@ class Board:
         """
         # we only need to do this in one transpose
         # eor numbers with row so only exclusively in row
-        return sum([sum((row ^ numbers) & row) for row in self.grid])
-
-        # those not in the numbers set are not marked
-        # return sum((self.numbers ^ numbers) & self.numbers)
+        return sum([sum((row ^ numbers) & row) for row in self.set_rows])
 
 def parse_input(dinput):
     numbers = [*map(int, dinput[0].split(','))]
