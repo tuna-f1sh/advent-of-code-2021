@@ -80,6 +80,9 @@ def bingo(numbers, boards):
             if b.is_match(sequence):
                 sumnm = b.sum_nonmatching(sequence)
 
+                # remove winner for p2
+                boards.remove(b)
+
                 # entry wants the sum of non-matching * number called
                 return sumnm * num
 
@@ -87,3 +90,9 @@ dinput = get_input(4)
 numbers, boards = parse_input(dinput)
 
 print(f"Part 1 result: {bingo(numbers,boards)}")
+
+# run until all boards have bingoed, last result is last winner - note will empy boards global
+while boards:
+    p2 = bingo(numbers, boards)
+
+print(f"Part 2 result: {p2}")
