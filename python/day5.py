@@ -31,6 +31,7 @@ def count_lines(dinput, diagonals=False):
             for x in range(min((p1.x, p2.x)), max((p1.x, p2.x)) + 1):
                 count.update([Point(x, p1.y)])
 
+        # diagonals at exactly 45 deg allows simple range scan
         elif diagonals:
             xs = range(p1.x, p2.x + 1) if p1.x < p2.x else range(p1.x, p2.x - 1, -1)
             ys = range(p1.y, p2.y + 1) if p1.y < p2.y else range(p1.y, p2.y - 1, -1)

@@ -26,4 +26,4 @@ def get_ints(day, **kwargs):
     """
     data = get_input(day, **kwargs)
 
-    return [int(x) for x in data]
+    return [*map(int, data)]
