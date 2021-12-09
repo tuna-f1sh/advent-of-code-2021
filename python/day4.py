@@ -1,5 +1,9 @@
 from inputs import get_input
 
+from collections import namedtuple
+
+Point = namedtuple('Point', ['x', 'y'])
+
 class Board:
     def __init__(self, grid_strs):
         # make grid with list rows
