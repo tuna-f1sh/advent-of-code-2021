@@ -101,7 +101,7 @@ class OctopusGrid:
                     if nt.update():
                         self.propogate(nt)
 
-    def step(self):
+    def step(self, reset=True):
         flashing_count = 0
         flashing = []
 
@@ -118,7 +118,7 @@ class OctopusGrid:
         for tile in self.grid.values():
             if tile.flashing:
                 flashing_count += 1
-                tile.reset()
+                if reset: tile.reset()
 
         return flashing_count
 

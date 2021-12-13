@@ -8,6 +8,7 @@ pytest = "*"
 ipython = "*"
 
 [dev-packages]
+flipdot = {editable = true, git = "https://github.com/tuna-f1sh/flipdot"}
 
 [requires]
 python_version = "3.10"
