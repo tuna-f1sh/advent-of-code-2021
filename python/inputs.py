@@ -1,5 +1,7 @@
 import os
-from typing import List
+from functools import wraps
+from time import time
+
 
 def get_input(day: int, example: bool = False, split: str = '\n', raw: bool = False):
     """
@@ -27,3 +29,14 @@ def get_ints(day, **kwargs):
     data = get_input(day, **kwargs)
 
     return [*map(int, data)]
+
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        # print(f"func:{f.__name__} args:[{args}, {kw}] took: {te-ts:2.4f} sec")
+        print(f"func:{f.__name__} took: {te-ts:2.4f} sec")
+        return result
+    return wrap

@@ -8,29 +8,34 @@ class Tile:
     def __init__(self, pos: Point, level: int):
         self.pos = pos
         self.level = level
-        self.flashing = False
+
+    @property
+    def flashing(self):
+        return self.level >= 10
 
     def reset(self):
         if self.flashing:
-            self.flashing = False
             self.level = 0
         else:
             raise RuntimeError("Tile not flashing!")
 
-    def update(self):
+    def update(self, amount=1):
+        """
+        Updates level and returns if update caused to flash
+        """
         # if not flashing already
         if not self.flashing:
 
             # increment level if not > 9
-            if self.level < 9:
-                self.level += 1
+            if (self.level + amount) <= 9:
+                self.level += amount
             else:
-                self.flashing = True
                 self.level = 10
 
                 return True
-
-        return False
+        # return false as we are flashing but this update didn't cause flashing
+        else:
+            return False
 
 class OctopusGrid:
     """
@@ -105,11 +110,11 @@ class OctopusGrid:
             if tile.update():
                 flashing.append(tile)
 
-        # recursively propogate the flashing states
+        # recursively propogate the flashing states - independant loop after all tiles updated
         for ftile in flashing:
             self.propogate(ftile)
 
-        # now count and reset those in flashing state
+        # now count and reset those in flashing state - independant again as can't reset until all propogated
         for tile in self.grid.values():
             if tile.flashing:
                 flashing_count += 1

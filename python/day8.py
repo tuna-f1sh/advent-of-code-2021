@@ -1,5 +1,5 @@
 import itertools
-from inputs import get_input
+from inputs import get_input, timing
 
 def parse_input(dinput):
     return [(x[0].strip().split(), x[1].strip().split()) for x in [line.split('|') for line in dinput]]
@@ -25,13 +25,19 @@ def part1(parsed):
     return ret
 
 def part2(parsed):
+    """
+    Inspired by Reddit post whilst solving my own (much more complicated!) solution. Does the same as SegmentNumber class solve but with fixed len values rather than auto - makes for simplier but less dynamic solution
+
+    >>> parsed = parse_input(get_input(8, example=True))
+    >>> part2(parsed)
+    61229
+    """
 
     sum_outputs = 0
 
     for i, o in parsed:
         # dict key length of input string and then set of string for wire mask
         len_mask = {len(s): set(s) for s in i}
-        print(len_mask)
 
         # append number as we iterate through string segmetns to keep base10 position
         n = ''
@@ -55,11 +61,18 @@ def part2(parsed):
 
     return sum_outputs
 
-class SevenSegent:
+class SevenSegment:
     wires = {'a', 'b', 'c', 'd', 'e', 'g', 'f'}
+
     def __init__(self):
         # start with all wires mapped to each segment since we don't know
-        self.mapping = {s: self.wires for s in self.wires}
+        self.mapping = {s: self.wires.copy() for s in self.wires}
+
+    def __repr__(self):
+        return f"SevenSegment: {self}"
+
+    def __str__(self):
+        return str(self.mapping)
 
     def mapped(self, segment):
         return len(self.mapping[segment]) == 1
@@ -69,6 +82,36 @@ class SevenSegent:
         # when each mapping key has only 1 wire mapped
         return all(map(self.mapped, self.mapping.keys()))
 
+    def solve_mapping(self, numbers):
+        # sort numbers by len of wires, lowest first to eliminate most options quickly
+        numbers = sorted(numbers, key=lambda n: len(n.wiring), reverse=False)
+
+        while not self.solved:
+            # for each segment
+            for segment in self.mapping:
+                # skip mapped
+                if self.mapped(segment):
+                    continue
+
+                for number in numbers:
+                    # if number has segment, mask with number wiring as it must include these
+                    # breakpoint()
+                    if segment in number.segment_map:
+                        self.mapping[segment] &= number.wiring
+                    # else remove them as it cannot
+                    else:
+                        self.mapping[segment] -= number.wiring
+
+                    # break if mapped
+                    if self.mapped(segment):
+                        break
+
+                # eliminate mapped from to be mapped
+                for s, wire in self.mapping.items():
+                    # remove wires that we know are mapped
+                    if self.mapped(s) and segment != s:
+                        self.mapping[segment] -= wire
+
 class SegmentNumber:
     def __init__(self, number, segment_map, unique=False):
         self.number = number
@@ -76,72 +119,123 @@ class SegmentNumber:
         # number of wires connecting
         self.wire_number = len(segment_map)
         self.unique = unique
-        self.possible = set()
-        self.found = False
+        self.possible_wiring = list()
+
+    def __repr__(self):
+        return f"SegmentNumber: {self.number}: {self.possible_wiring}"
+
+    def __str__(self):
+        return str(self.number)
+
+    @property
+    def solved(self):
+        return len(self.possible_wiring) == 1
+
+    @property
+    def wiring(self):
+        if not self.solved:
+            raise RuntimeError("Number not solved!")
+
+        return self.possible_wiring[0]
 
     def process_possible(self, inputs):
         """
         Process the possible wires connecting for the number given input
         """
         # possible combos are those of len required for this number
-        possible_combo = list(itertools.compress(inputs, map(lambda x: len(x) == self.wire_number, inputs)))
+        sets = [set(i) for i in inputs]
+        self.possible_wiring = list(itertools.compress(sets, map(lambda x: len(x) == self.wire_number, sets)))
 
-        # create a set of possible wires by concat possible combos into set to get just wires that might connect segment
-        self.possible = set(''.join(possible_combo))
+    def overlapping(self, numbers):
+        """
+        Returns numbers with overlapping segments
+        """
+        return [itertools.compress(numbers, [len(number.segment_map & self.segment_map) > 0 for number in numbers])]
 
-        # check if found when length of possible == wires required - this should always be true for unique numbers
-        if len(self.possible) == self.wire_number:
-            self.found = True
+    def solve_possible(self, numbers):
+        # make a copy of possible to drop not possible whilst iterating on possible_wiring
+        possible = self.possible_wiring.copy()
+
+        # for each solved, mask with possible, check len of overlapping if equal, it's still possible
+        for pos in self.possible_wiring:
+
+            for number in numbers:
+                # on those found only but not just unique allows us to use already solved
+                if number.solved:
+                    # if len of possible masked with other number wiring doesn't match len of overlapping wiring, it can't be possible
+                    if len(pos & number.wiring) != len(number.segment_map & self.segment_map):
+                        possible.remove(pos)
+                        break
+
+            # break if only one kept
+            if len(possible) == 1:
+                break
+
+        if len(possible) == 1:
+            self.possible_wiring = possible
         else:
-            self.found = False
+            raise RuntimeError("Unable to solve with available numbers")
 
-seven_seg = SevenSegent()
-# numbers in a 7-segment display and wire count required
-segment_numbers = [
-        SegmentNumber(0, seven_seg.wires - {'d'}),
-        SegmentNumber(1, {'c', 'f'}, unique=True),
-        SegmentNumber(2, seven_seg.wires - {'b', 'f'}),
-        SegmentNumber(3, seven_seg.wires - {'b', 'e'}),
-        SegmentNumber(4, seven_seg.wires - {'a', 'e', 'g'}, unique=True),
-        SegmentNumber(5, seven_seg.wires - {'c', 'e'}),
-        SegmentNumber(6, seven_seg.wires - {'c'}),
-        SegmentNumber(7, {'a', 'c', 'f'}, unique=True),
-        SegmentNumber(8, seven_seg.wires, unique=True),
-        SegmentNumber(9, seven_seg.wires - {'e'}),
-        ]
+def get_segment_numbers():
+    # numbers in a 7-segment display and wire count required
+    return [
+            SegmentNumber(0, SevenSegment.wires - {'d'}),
+            SegmentNumber(1, {'c', 'f'}, unique=True),
+            SegmentNumber(2, SevenSegment.wires - {'b', 'f'}),
+            SegmentNumber(3, SevenSegment.wires - {'b', 'e'}),
+            SegmentNumber(4, SevenSegment.wires - {'a', 'e', 'g'}, unique=True),
+            SegmentNumber(5, SevenSegment.wires - {'c', 'e'}),
+            SegmentNumber(6, SevenSegment.wires - {'c'}),
+            SegmentNumber(7, {'a', 'c', 'f'}, unique=True),
+            SegmentNumber(8, SevenSegment.wires, unique=True),
+            SegmentNumber(9, SevenSegment.wires - {'e'}),
+            ]
+
+def decode_line(input_numbers):
+        numbers = get_segment_numbers()
+
+        # process numbers from input
+        for number in numbers:
+            number.process_possible(input_numbers)
+
+        # then solve once we have all
+        for number in numbers:
+            number.solve_possible(numbers)
+
+        # now solve seven segment wiring
+        sseg = SevenSegment()
+        sseg.solve_mapping(numbers)
+
+        return numbers, sseg
+
+def solve_line(numbers, output_numbers):
+    total = ''
+
+    for ostr in output_numbers:
+        oset = set(ostr)
+        for num in numbers:
+            if num.wiring == oset:
+                total += str(num)
+                break
+
+    return int(total)
+
+
+def solve(dinput):
+    """
+    >>> solve(get_input(8, example=True))
+    61229
+    """
+    parsed = parse_input(dinput)
+    total = 0
+
+    for i, o in parsed:
+        numbers, _ = decode_line(i)
+        total += solve_line(numbers, o)
+
+    return total
 
 dinput = get_input(8)
-parsed = parse_input(dinput)
 
-print(f"Part 1 result: {part1(parsed)}")
-print(f"Part 2 result: {part2(parsed)}")
-
-# inputs = [i for i, _ in parsed]
-# outputs = [o for _, o in parsed]
-
-# for number in segment_numbers:
-#     number.process_possible(inputs[0])
-
-# # run until all segments have only one wire mapped
-# while(not seven_seg.solved):
-#     # for each segment in the display
-#     for segment, wires in seven_seg.mapping.items():
-#         # skip if solved
-#         if seven_seg.mapped(segment):
-#             continue
-
-#         segment_numbers = itertools.compress(
-#                 segment_numbers, 
-#                 map(lambda n: 
-#                     segment in n.segment_map and n.unique and n.found, segment_numbers
-#                     ))
-
-#         # updated the mapping based on found or unique numbers
-#         for number in segment_numbers:
-#             # does the number use this segment?
-#             if segment in number.segment_map:
-#                 breakpoint()
-#                 wires &= number.possible
-#                 seven_seg.mapping[segment] = wires
-
-#     breakpoint()
+print(f"Part 1 result: {part1(parse_input(dinput))}")
+print(f"Part 2 result: {solve(dinput)}")
