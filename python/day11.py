@@ -135,9 +135,11 @@ class OctopusGrid:
 
         return step
 
-dinput = get_input(11)
 
-octo_grid = OctopusGrid(dinput)
-print(f"Part 1 result: {sum(octo_grid.step() for _ in range(100))}")
-octo_grid = OctopusGrid(dinput)
-print(f"Part 2 result: {octo_grid.find_all_flash()}")
+if __name__ == "__main__":
+    dinput = get_input(11)
+
+    octo_grid = OctopusGrid(dinput)
+    print(f"Part 1 result: {sum(octo_grid.step() for _ in range(100))}")
+    octo_grid = OctopusGrid(dinput)
+    print(f"Part 2 result: {octo_grid.find_all_flash()}")

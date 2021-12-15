@@ -235,7 +235,8 @@ def solve(dinput):
 
     return total
 
-dinput = get_input(8)
+if __name__ == "__main__":
+    dinput = get_input(8)
 
-print(f"Part 1 result: {part1(parse_input(dinput))}")
-print(f"Part 2 result: {solve(dinput)}")
+    print(f"Part 1 result: {part1(parse_input(dinput))}")
+    print(f"Part 2 result: {solve(dinput)}")

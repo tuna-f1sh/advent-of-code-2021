@@ -4,7 +4,7 @@ from PIL import ImageDraw
 from flipdot import client, display
 
 from inputs import get_input
-from day11 import Tile, OctopusGrid, dinput
+from day11 import OctopusGrid
 
 # 1 x 2, 28 x 7 panels in portrait
 PANEL_X = 28
@@ -28,6 +28,8 @@ def display_text(d, text, xy=(0,0), font=None, rotate=False):
     del draw
 
 def octopus_flip(steps=100, refresh=0.15):
+    dinput = get_input(11)
+
     # FlipDot display
     disp = display.Display(MATRIX_X, MATRIX_Y, display.create_display((PANEL_X, PANEL_Y), (MATRIX_X, MATRIX_Y)))
     disp.connect(client.SerialClient('/dev/tty.usbserial-A9IYFIPD'))
