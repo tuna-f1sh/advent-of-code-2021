@@ -17,6 +17,13 @@ ILLEGAL_POINTS = {
     ">": 25137
 }
 
+CLOSING_POINTS = {
+    ")": 1,
+    "]": 2,
+    "}": 3,
+    ">": 4
+}
+
 def find_closing(char, line):
     ret = 0
 
@@ -28,15 +35,16 @@ def find_closing(char, line):
 
         # if we find closing break
         if c == CHAR_PAIRS[char]:
-            return 0
+            return 0, i
         # is it another (invalid) closing?
         elif c in CHAR_PAIRS.values():
-            return ILLEGAL_POINTS[c]
+            return ILLEGAL_POINTS[c], i
         # else must be opening so run recursive
         else:
-            ret += find_closing(c, line[i+1:])
+            rec, i = find_closing(c, line[i+1:])
+            ret += rec
 
-    return ret
+    return ret, len(line) - 1 # index is last in line if here
 
 def syntax_checker(dinput):
     """
@@ -44,28 +52,47 @@ def syntax_checker(dinput):
 
     >>> dinput = get_input(10, example=True)
     >>> syntax_checker(dinput)
-    26397
+    (26397, 288957)
 
     """
     checker_score = 0
+    closing_scores = []
 
     for line in dinput:
-        opening = [line[0]]
+        opening = []
+        corrupted = 0
 
         for c in line:
-
             # updating opening if opening char
             if c in CHAR_PAIRS:
                 opening.append(c)
             # if closed, pop opening
-            elif c == CHAR_PAIRS[opening[-1]]:
+            elif c in CHAR_PAIRS[opening[-1]]:
                 opening.pop()
             elif c in CHAR_PAIRS.values():
-                checker_score += ILLEGAL_POINTS[c]
+                corrupted = ILLEGAL_POINTS[c]
                 break
 
-    return checker_score
+        if corrupted > 0:
+            checker_score += corrupted
+        elif len(opening) > 0:
+            closing_score = 0
+            # we want last in first in line so reverse
+            opening.reverse()
+            # after running checker on line, chars left in opening are unclosed
+            closing_required = [CHAR_PAIRS[c] for c in opening]
+
+            for closing in closing_required:
+                closing_score *= 5
+                closing_score += CLOSING_POINTS[closing]
+
+            closing_scores.append(closing_score)
+
+    closing_scores.sort()
+
+    return checker_score, closing_scores[len(closing_scores) // 2]
 
 dinput = get_input(10)
 
-print(f"Part 1 result: {syntax_checker(dinput)}")
+print(f"Part 1 result: {syntax_checker(dinput)[0]}")
+print(f"Part 2 result: {syntax_checker(dinput)[1]}")

@@ -32,7 +32,8 @@ def octopus_flip(steps=100, refresh=0.15):
 
     # FlipDot display
     disp = display.Display(MATRIX_X, MATRIX_Y, display.create_display((PANEL_X, PANEL_Y), (MATRIX_X, MATRIX_Y)))
-    disp.connect(client.SerialClient('/dev/tty.usbserial-A9IYFIPD'))
+    # disp.connect(client.SerialClient('/dev/tty.usbserial-A9IYFIPD'))
+    disp.connect(client.TCPClient('192.168.8.234', 9000))
     disp.reset(white=False)
     disp.send()
 
